@@ -3,13 +3,17 @@
 # =======================================================================================
 # Features: - MNIST dataset images (handrawn digits 0-9)
 #           - 60000 training images, 10000 test images
-#           - Each image is 28 x 28 = 784 pixels for 784 features
+#           - Each image is 28 x 28 = 784 pixels for 784 features per image
 # Labels: Respective number values
+# 3 Layer Feedforward Neural Network: - 784 inputs
+#                                     - 128 neurons in the hidden layer
+#                                     - 10 outputs
 
-# Import path 
+# Import pathlib and urllib modules
 from pathlib import Path
 from urllib.request import urlretrieve
 
+# Import numpy and matplotlib modules
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -20,6 +24,8 @@ url = "https://storage.googleapis.com/tensorflow/tf-keras-datasets/mnist.npz"
 if not path.exists():
     urlretrieve(url, path)
 
+# Retrieve dataset and assign images to training data, test data, training labels, and
+# test labels.
 with np.load(path, allow_pickle=False) as data:
     X_train = data["x_train"]
     y_train = data["y_train"]
@@ -59,14 +65,26 @@ b1 = np.zeros((1, 128), dtype=np.float32)
 b2 = np.zeros((1, 10), dtype=np.float32)
 
 # Hidden-layer forward pass. Take first 32 training images using slicing. Then calculate
-# each respective neuron Z1 value which is the weighted sum of the images 784 features +
-# its bias.
+# each respective neuron Z1 value which is the weighted sum of the images 784 features
+# and W1 + its bias.
 X_batch = X_train[:32]
 Z1 = X_batch @ W1 + b1
 
 # Apply ReLU to Z1.
 A1 = np.maximum(0, Z1)
 
+# Output-layer forward pass. Calculate each respective neuron Z2 value which is the 
+# weighted sum of the A1 values and W2 + its bias.
 Z2 = A1 @ W2 + b2
-print("Z2",Z2.shape)
+
+# Apply Softmax to turn each of the 10 outputs into probabilities.
+# 1. Subtract each rows maximum to prevent overflow without changing the probabilities.
+shifted_Z2 = Z2 - np.max(Z2, axis=1, keepdims=True)
+# 2. Exponentiate row to make each value positive and amplify differences.
+exp_Z2 = np.exp(shifted_Z2)
+# 3. Divide each row by its total to normalize output.
+A2 = exp_Z2 / np.sum(exp_Z2, axis=1, keepdims=True)
+
+# Multiclass cross-entropy loss...
+
 
